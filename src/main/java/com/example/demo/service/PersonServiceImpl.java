@@ -41,8 +41,8 @@ public class PersonServiceImpl implements PersonService {
         personRepository.clear();
 
         List<Document> listJsonObjects = parseJsonFile();
-
         personRepository.insert(listJsonObjects);
+
     }
 
     private List<Document> parseJsonFile() {
@@ -57,7 +57,7 @@ public class PersonServiceImpl implements PersonService {
                     parsJson.add(document);
                 }
             } else {
-                throw new FileException("Expected array og objects");
+                throw new FileException("Expected array of objects");
             }
 
         } catch (IOException e) {
@@ -93,12 +93,17 @@ public class PersonServiceImpl implements PersonService {
 
         byte[] buffer = new byte[1024];
         try (ZipInputStream zis = new ZipInputStream(jsonZip.getInputStream())) {
+
             ZipEntry zipEntry;
-            while ((zipEntry = zis.getNextEntry()) != null) {
+            if ((zipEntry = zis.getNextEntry()) != null) {
+                if ((zis.getNextEntry()) != null) {
+                    throw new IllegalFileException("Must be only one file in zip.");
+                }
                 if (!zipEntry.getName().endsWith(".json")) {
                     throw new IllegalFileException("Must be json file not  " + zipEntry.getName());
 
                 }
+
 
                 File destFile = new File(destDir, "pep.json");
 
@@ -108,10 +113,13 @@ public class PersonServiceImpl implements PersonService {
                         fos.write(buffer, 0, len);
                     }
                 }
+            } else {
+                throw new IllegalFileException("Must be file in zip.");
             }
+
             zis.closeEntry();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 
