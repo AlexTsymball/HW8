@@ -20,10 +20,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 @Service
@@ -93,20 +95,13 @@ public class PersonServiceImpl implements PersonService {
 
         byte[] buffer = new byte[1024];
         try (ZipInputStream zis = new ZipInputStream(jsonZip.getInputStream())) {
-
             ZipEntry zipEntry;
             if ((zipEntry = zis.getNextEntry()) != null) {
-                if ((zis.getNextEntry()) != null) {
-                    throw new IllegalFileException("Must be only one file in zip.");
-                }
                 if (!zipEntry.getName().endsWith(".json")) {
                     throw new IllegalFileException("Must be json file not  " + zipEntry.getName());
 
                 }
-
-
                 File destFile = new File(destDir, "pep.json");
-
                 try (FileOutputStream fos = new FileOutputStream(destFile)) {
                     int len;
                     while ((len = zis.read(buffer)) > 0) {
@@ -116,7 +111,9 @@ public class PersonServiceImpl implements PersonService {
             } else {
                 throw new IllegalFileException("Must be file in zip.");
             }
-
+            if ((zis.getNextEntry()) != null) {
+                throw new IllegalFileException("Must be only one file in zip.");
+            }
             zis.closeEntry();
         } catch (IOException ex) {
             ex.printStackTrace();
